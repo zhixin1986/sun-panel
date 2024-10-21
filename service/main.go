@@ -14,8 +14,18 @@ func main() {
 		panic(err)
 	}
 	httpPort := global.Config.GetValueStringOrDefault("base", "http_port")
-
-	if err := router.InitRouters(":" + httpPort); err != nil {
-		panic(err)
+	httpsPort := global.Config.GetValueStringOrDefault("base", "https_port")
+	sslEnable := global.Config.GetValueStringOrDefault("base", "ssl_enable")
+	if sslEnable == "true" {
+		if err := router.InitRouters(":"+httpsPort, true); err != nil {
+			log.Println("InitRouters 错误:", err.Error())
+			panic(err)
+		}
+	} else {
+		if err := router.InitRouters(":"+httpPort, false); err != nil {
+			log.Println("InitRouters 错误:", err.Error())
+			panic(err)
+		}
 	}
+
 }

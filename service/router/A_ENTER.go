@@ -1,7 +1,9 @@
 package router
 
 import (
+	"net/http"
 	"sun-panel/global"
+
 	// "sun-panel/router/admin"
 	"sun-panel/router/openness"
 	"sun-panel/router/panel"
@@ -11,7 +13,7 @@ import (
 )
 
 // 初始化总路由
-func InitRouters(addr string) error {
+func InitRouters(addr string, ssl bool) error {
 	router := gin.Default()
 	rootRouter := router.Group("/")
 	routerGroup := rootRouter.Group("api")
@@ -34,7 +36,16 @@ func InitRouters(addr string) error {
 	// 上传的文件
 	sourcePath := global.Config.GetValueString("base", "source_path")
 	router.Static(sourcePath[1:], sourcePath)
+	srv := &http.Server{
+		Addr:    addr,
+		Handler: router,
+	}
+	if ssl {
+		global.Logger.Info("Sun-Panel is Started.  Listening and serving HTTPS on ", addr)
+		return srv.ListenAndServeTLS("conf/ssl.cert", "conf/ssl.key")
+	} else {
+		global.Logger.Info("Sun-Panel is Started.  Listening and serving HTTP on ", addr)
+		return router.Run(addr)
+	}
 
-	global.Logger.Info("Sun-Panel is Started.  Listening and serving HTTP on ", addr)
-	return router.Run(addr)
 }
